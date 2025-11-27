@@ -28,213 +28,37 @@ enum LogAction {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  name           String
-  username       String   @unique
-  email          String   @unique
-  phone          String?
-  password       String
-  role           UserRole @default(STAFF)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  driverProfile  DriverProfile?
-  bookings       Booking[]
-  activityLogs   ActivityLog[]
-}
-
-
-
-model DriverProfile {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  licenseNumber String
-  experience    Int?
-  rating        Float?   @default(0)
-  status        DriverStatus @default(ACTIVE)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user          User     @relation(fields: [userId], references: [id])
-  vehicles      Vehicle[]
-}
-
-enum DriverStatus {
-  ACTIVE
-  SUSPENDED
-  PENDING
-}
-
-//جدول المركبات
-model Vehicle {
-  id           String   @id @default(cuid())
-  driverId     String
-  type         VehicleType
-  plateNumber  String
-  seatsCount   Int
-  imageUrl     String?
-  model        String?
-  createdAt    DateTime @default(now())
-
-  driver       DriverProfile @relation(fields: [driverId], references: [id])
-  trips        Trip[]
-  seats        Seat[]
-}
-
-enum VehicleType {
-  SEDAN
-  VAN
-  BUS
-}
-
-//جدول المدن المحددة للرحلات
-model City {
   id        String   @id @default(cuid())
-  name      String   @unique
-  country   String?
-  latitude  Float?
-  longitude Float?
+  name      String
+  username  String   @unique
+  email     String   @unique
+  phone     String?
+  password  String
+  role      UserRole @default(STAFF)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tripsFrom Trip[]   @relation("TripFromCity")
-  tripsTo   Trip[]   @relation("TripToCity")
+  permissions UserPermission[] // 👈 ربط مع صلاحيات المستخدم
 }
 
-
-//جدول الرحلات
-model Trip {
-  id             String   @id @default(cuid())
-  vehicleId      String
-  fromCityId     String
-  toCityId       String
-  startTime      DateTime
-  endTime        DateTime?
-  estimatedHours Float
-  pricePerSeat   Float
-  availableSeats Int
-  status         TripStatus @default(UPCOMING)
-  description    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
-  fromCity       City      @relation("TripFromCity", fields: [fromCityId], references: [id])
-  toCity         City      @relation("TripToCity", fields: [toCityId], references: [id])
-  stops          Stop[]
-  bookings       Booking[]
-}
-
-enum TripStatus {
-  UPCOMING
-  ONGOING
-  COMPLETED
-  CANCELLED
-}
-
-
-//جدول المقاعد داخل المركبات
-model Seat {
-  id         String   @id @default(cuid())
-  vehicleId  String
-  seatNumber String
-  isBooked   Boolean  @default(false)
-
-  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
-  booking    Booking?
-}
-
-
-//عند حجز مقعد معين في رحلة معينة.
-model Booking {
-  id         String   @id @default(cuid())
-  userId     String
-  tripId     String
-  seatId     String   @unique  // 👈 الحل هنا
-  paymentId  String?
-  status     BookingStatus @default(PENDING)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user       User     @relation(fields: [userId], references: [id])
-  trip       Trip     @relation(fields: [tripId], references: [id])
-  seat       Seat     @relation(fields: [seatId], references: [id])
-  payment    Payment?
-}
-
-
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-}
-
-
-//جدول الدفع
-model Payment {
+model Permission {
   id          String   @id @default(cuid())
-  bookingId   String   @unique
-  amount      Float
-  method      PaymentMethod
-  status      PaymentStatus @default(PENDING)
-  createdAt   DateTime @default(now())
-
-  booking     Booking  @relation(fields: [bookingId], references: [id])
-}
-
-enum PaymentMethod {
-  CASH
-  CARD
-  WALLET
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-
-//جدول نقاط الاستراحة على الطرق
-model Stop {
-  id        String   @id @default(cuid())
-  tripId    String
-  name      String
-  order     Int
-  latitude  Float?
-  longitude Float?
-  duration  Int?     // مدة التوقف بالدقائق
-  createdAt DateTime @default(now())
-
-  trip      Trip     @relation(fields: [tripId], references: [id])
-}
-
-//جدول إدارة الشركة
-model Company {
-  id          String   @id @default(cuid())
-  name        String
+  name        String   @unique
   description String?
-  address     String?
-  phone       String?
-  email       String?
-  website     String?
-  logoUrl     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  users UserPermission[]
 }
 
-//جدول السجلات والعمليات
-model ActivityLog {
-  id        String   @id @default(cuid())
-  userId    String
-  action    LogAction
-  tableName String
-  recordId  String
-  oldData   Json?
-  newData   Json?
-  createdAt DateTime @default(now())
+model UserPermission {
+  id           String   @id @default(cuid())
+  userId       String
+  permissionId String
+  isActive     Boolean  @default(false)
+  assignedAt   DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
 }

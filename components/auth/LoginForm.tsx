@@ -17,8 +17,9 @@ import { LoginSchema } from "@/schemas";
 import { Button } from "../ui/button";
 
 import { login } from "@/lib/action/auth/login";
-import FormError from "../components/FormError";
-import FormSuccess from "../components/FormSuccess";
+import FormError from "./FormError";
+import FormSuccess from "./FormSuccess";
+
 
 const LoginForm = () => {
   const [error, setError] = useState<string | undefined>();
