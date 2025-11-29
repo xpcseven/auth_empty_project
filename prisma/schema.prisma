@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,12 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// enum for user roles
 enum UserRole {
   SUPERADMIN
   ADMIN
-  DRIVER
-  STAFF
+  USER
 }
 
 enum LogAction {
@@ -28,37 +20,55 @@ enum LogAction {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  username  String   @unique
-  email     String   @unique
-  phone     String?
-  password  String
-  role      UserRole @default(STAFF)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String           @id @default(cuid())
+  name       String
+  username   String           @unique
+  email      String           @unique
+  phone      String?
+  password   String
+  role       UserRole         @default(USER)
+  isActive   Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
-  permissions UserPermission[] // 👈 ربط مع صلاحيات المستخدم
+  permissions UserPermission[]  // 👈 back-rel
+}
+
+model PermissionGroup {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  description String?
+
+  permissions Permission[]   // 👈 back-rel
 }
 
 model Permission {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String            @id @default(cuid())
+  name      String
+  groupId   String
+  group     PermissionGroup   @relation(fields: [groupId], references: [id])
 
-  users UserPermission[]
+  abilities Ability[]         // 👈 back-rel
+}
+
+model Ability {
+  id            String     @id @default(cuid())
+  name          String     // create, update, delete, view
+  permissionId  String
+  permission    Permission @relation(fields: [permissionId], references: [id])
+
+  users         UserPermission[] // 👈 back-rel
 }
 
 model UserPermission {
-  id           String   @id @default(cuid())
-  userId       String
-  permissionId String
-  isActive     Boolean  @default(false)
-  assignedAt   DateTime @default(now())
+  id         String     @id @default(cuid())
+  userId     String
+  abilityId  String
+  allowed    Boolean    @default(false)
+  assignedAt DateTime   @default(now())
 
   user       User       @relation(fields: [userId], references: [id])
-  permission Permission @relation(fields: [permissionId], references: [id])
+  ability    Ability    @relation(fields: [abilityId], references: [id])
+
+  @@unique([userId, abilityId]) // 🔒 لمنع التكرار
 }
