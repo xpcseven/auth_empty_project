@@ -38,7 +38,7 @@ export async function register(values: z.infer<typeof RegisterSchema>) {
         name,
         password: hashedPassword,
         username,
-        role: "STAFF",
+        role: "USER",
         isActive: true,
       
       },

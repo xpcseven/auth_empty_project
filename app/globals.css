@@ -2,8 +2,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('/fonts/Cairo-Regular.ttf');
-
 
 @font-face {
   font-family: 'CairoFont';

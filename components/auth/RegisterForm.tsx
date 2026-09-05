@@ -16,8 +16,8 @@ import { z } from "zod";
 import { RegisterSchema } from "@/schemas";
 import { Button } from "../ui/button";
 import { register } from "@/lib/action/auth/register";
-import FormError from "../components/FormError";
-import FormSuccess from "../components/FormSuccess";
+import FormError from "./FormError";
+import FormSuccess from "./FormSuccess";
 
 const RegisterForm = () => {
 
